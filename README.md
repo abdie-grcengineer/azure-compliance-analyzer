@@ -1,4 +1,4 @@
-# Azure_microsoft_defender
+# azure-compliance-analyzer
 
 > Continuous CMMC Level 2 evidence pipeline for Azure. Defender for Cloud findings + Azure AI Foundry analyst agent, deployed with Terraform.
 

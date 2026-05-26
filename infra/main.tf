@@ -1,5 +1,5 @@
 # =============================================================================
-# Azure_microsoft_defender - v1 infrastructure
+# azure-compliance-analyzer - v1 infrastructure
 #
 # Provisions the full stack:
 #   - Storage Account + Blob containers (reports, config)

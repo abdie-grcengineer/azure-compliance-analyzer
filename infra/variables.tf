@@ -54,7 +54,7 @@ variable "common_tags" {
   type = map(string)
   description = "Tags applied to every resource. azurerm has no default_tags provider feature, so we pass this map to each resource explicitly."
   default = {
-    Project         = "Azure_microsoft_defender"
+    Project         = "azure-compliance-analyzer"
     ManagedBy       = "terraform"
     ComplianceScope = "cmmc-l2"
   }
