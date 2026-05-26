@@ -1,0 +1,15 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AZURE_CLIENT_ID": "<uami-client-id-for-local-az-login>",
+    "FOUNDRY_PROJECT_ENDPOINT": "https://<account>.cognitiveservices.azure.com/api/projects/grc-analyst",
+    "FOUNDRY_AGENT_MODEL": "gpt-4o",
+    "REPORTS_STORAGE_ACCOUNT": "<storage-account-name>",
+    "REPORTS_CONTAINER": "reports",
+    "DEFENDER_STANDARD": "NIST SP 800-171 Rev. 2",
+    "DEFENDER_HOURS": "168",
+    "SUBSCRIPTION_ID": "<subscription-id>"
+  }
+}

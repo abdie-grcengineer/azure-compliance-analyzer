@@ -1,0 +1,9 @@
+# Changelog
+
+## [Unreleased]
+
+### v1 — Initial release
+- Terraform IaC (azurerm 4.x + azapi 2.x) for Storage, Log Analytics + App Insights, Azure AI Foundry account + project + model deployment, Linux consumption Function App + user-assigned managed identity.
+- Python Function (timer trigger, weekly) that pulls Defender for Cloud regulatory compliance assessments for NIST SP 800-171 Rev. 2 (CMMC L2's underlying control set), maps each to CMMC L2 practice IDs via a JSON-driven keyword mapper, invokes an Azure AI Foundry agent for narrative generation, and writes the Markdown report to Blob Storage.
+- RBAC via managed identity: Storage Blob Data Contributor (storage scope), Azure AI User (Foundry project scope), Security Reader (subscription scope, post-deploy manual step).
+- Documentation: README with architecture diagram and roadmap, what-this-tool-does.md with the GRC Engineering framing.

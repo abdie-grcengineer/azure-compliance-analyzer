@@ -1,0 +1,11 @@
+{
+  "frameworks": [
+    {
+      "id": "CMMC_L2",
+      "name": "CMMC Level 2",
+      "description": "Cybersecurity Maturity Model Certification (CMMC) Level 2. 110 practices, derived from NIST SP 800-171 Rev. 2.",
+      "defenderStandardName": "NIST SP 800-171 Rev. 2",
+      "audience": "DoD contractors handling Controlled Unclassified Information (CUI)."
+    }
+  ]
+}

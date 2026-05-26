@@ -1,0 +1,15 @@
+# Copy to terraform.tfvars and fill in.
+
+resource_group_name = "rg-azure-msdefender"
+location            = "eastus"
+project_name        = "azmsdef"
+environment         = "demo"
+
+# Defender's built-in NIST SP 800-171 Rev. 2 standard is the underlying
+# control set CMMC Level 2 enforces. Swap to a different built-in or a
+# custom standard if your tenant uses one.
+defender_standard_name = "NIST SP 800-171 Rev. 2"
+
+foundry_model_name     = "gpt-4o"
+foundry_model_version  = "2024-11-20"
+foundry_model_capacity = 50
