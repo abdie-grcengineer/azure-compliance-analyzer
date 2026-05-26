@@ -1,6 +1,6 @@
 # Copy to terraform.tfvars and fill in.
 
-resource_group_name = "rg-azure-compliance-analyzer"
+resource_group_name = "rg-aca"
 location            = "eastus"
 project_name        = "aca"
 environment         = "demo"
