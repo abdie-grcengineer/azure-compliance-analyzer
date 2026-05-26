@@ -69,7 +69,7 @@ Prereqs: Azure CLI logged in (`az login`), Terraform 1.6+, an empty resource gro
 
 ```bash
 # 1. Create the resource group (one-time, manual so this module stays import-friendly)
-az group create -n rg-azure-msdefender -l eastus
+az group create -n rg-aca -l eastus
 
 # 2. Provision infra
 cd infra
