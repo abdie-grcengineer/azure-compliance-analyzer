@@ -1,8 +1,8 @@
 # Copy to terraform.tfvars and fill in.
 
-resource_group_name = "rg-azure-msdefender"
+resource_group_name = "rg-azure-compliance-analyzer"
 location            = "eastus"
-project_name        = "azmsdef"
+project_name        = "aca"
 environment         = "demo"
 
 # Defender's built-in NIST SP 800-171 Rev. 2 standard is the underlying

@@ -11,8 +11,8 @@ variable "location" {
 
 variable "project_name" {
   type        = string
-  description = "Short prefix used for resource names (lowercase, 3-12 chars, no dashes)."
-  default     = "azmsdef"
+  description = "Short prefix used for Azure resource names (lowercase, 3-12 chars, no dashes). Defaults to 'aca' (azure-compliance-analyzer). Changing this after deploy forces destroy/recreate of every resource."
+  default     = "aca"
 
   validation {
     condition     = can(regex("^[a-z0-9]{3,12}$", var.project_name))
