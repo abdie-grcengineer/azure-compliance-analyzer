@@ -51,15 +51,16 @@ For a longer explanation of the problem, the approach, and why this counts as GR
 - **Standard**: CMMC Level 2 (110 practices, mapped through NIST SP 800-171 Rev. 2).
 - **Compute**: Linux Consumption Function App (Python 3.11) with a weekly NCRONTAB timer.
 - **AI**: Azure AI Foundry project hosting a `cmmc-compliance-analyst` agent backed by a **Phi-4** deployment (Microsoft IP, in Azure's compliance boundary). Picked over GPT-4o deliberately so the system has zero third-party model vendors in its supply chain, which matters when a CMMC assessor asks for a component inventory. Agent is created on first invocation if it doesn't exist.
-- **Identity**: User-assigned managed identity, RBAC-scoped (`Storage Blob Data Contributor` on the storage account, `Azure AI User` on the Foundry project, `Security Reader` at subscription scope via a post-deploy `az role assignment`).
-- **Output**: Markdown report per run, dropped in `reports/` container in Blob Storage.
+- **Identity**: User-assigned managed identity, RBAC-scoped (`Storage Blob Data Contributor` on the storage account, `Azure AI Developer` on the Foundry project, `Security Reader` at subscription scope via a post-deploy `az role assignment`).
+- **Output**: Markdown report per run, dropped in `reports/` container in Blob Storage AND emailed to the recipient set in `var.recipient_email` (default: `abdiemohamed.tech@gmail.com`).
+- **Email**: Azure Communication Services Email with an Azure-managed sender domain (`donotreply@<random>.azurecomm.net`). No DNS verification required, no third-party email vendor (no SendGrid). Matches the same in-boundary supply-chain story as the Phi-4 model choice.
 - **Static landing page**: Royal blue + white "GRC Engineering" page served from a dedicated storage account at `https://grcengineering<suffix>.z13.web.core.windows.net/`. Source in [web/index.html](web/index.html); served via Blob Storage's native static-website hosting (no separate web server or App Service).
 
 ## What's not in v1 (roadmap)
 
 | Version | Adds |
 |---|---|
-| v2 | Customer-managed-key encryption via Key Vault. Azure Communication Services Email delivery. Per-run evidence bundle (JSON + Markdown + raw Defender response) with content hash for chain-of-custody. |
+| v2 | Customer-managed-key encryption via Key Vault. Move ACS connection string into Key Vault and switch ACS auth from connection string to managed identity. Per-run evidence bundle (JSON + Markdown + raw Defender response) with content hash for chain-of-custody. |
 | v3 | Foundry agent tools (`get_findings`, `lookup_practice`, `write_report`) so the agent orchestrates instead of being called once. |
 | v4 | Vector-store grounding on prior reports + CMMC Assessment Guide. Foundry Evaluations against a golden-set of past reports for groundedness and practice-mapping accuracy. |
 | v5 | Multi-framework: add HIPAA (`HIPAA HITRUST`) and FedRAMP Moderate alongside CMMC L2. |

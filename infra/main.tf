@@ -243,9 +243,69 @@ resource "azurerm_linux_function_app" "func" {
     DEFENDER_STANDARD = var.defender_standard_name
     DEFENDER_HOURS    = "168"
     SUBSCRIPTION_ID   = data.azurerm_client_config.current.subscription_id
+
+    # ACS Email delivery. v1 uses connection-string auth for simplicity; v2
+    # moves the connection string into Key Vault and switches the Function
+    # to MI auth (the only built-in role is "Communication and Email Service
+    # Owner" which is broader than we want long-term).
+    ACS_CONNECTION_STRING   = azurerm_communication_service.acs.primary_connection_string
+    ACS_SENDER              = "donotreply@${azurerm_email_communication_service_domain.azuremanaged.from_sender_domain}"
+    REPORT_RECIPIENT_EMAIL  = var.recipient_email
   }
 
   tags = local.tags
+}
+
+# === Azure Communication Services - Email ====================================
+#
+# Email delivery for the weekly CMMC report. Uses an Azure-managed sender
+# domain (donotreply@<random>.azurecomm.net) so we don't need DNS
+# verification on a custom domain. Recipient is set via var.recipient_email.
+#
+# In-boundary choice: ACS Email is part of Azure's FedRAMP High + DoD IL5
+# authorization, matching the same supply-chain-clean story we made for
+# picking Phi over GPT-4o. No third-party email vendor (SendGrid, etc).
+
+resource "azurerm_email_communication_service" "email" {
+  name                = "${local.name_prefix}-email-svc"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  data_location       = "United States"
+  tags                = local.tags
+}
+
+resource "azurerm_email_communication_service_domain" "azuremanaged" {
+  name              = "AzureManagedDomain"
+  email_service_id  = azurerm_email_communication_service.email.id
+  domain_management = "AzureManaged"
+  tags              = local.tags
+}
+
+resource "azurerm_communication_service" "acs" {
+  name                = "${local.name_prefix}-acs"
+  resource_group_name = data.azurerm_resource_group.rg.name
+  data_location       = "United States"
+  tags                = local.tags
+}
+
+# Link the Azure-managed email domain to the Communication Service. Without
+# this link, send attempts return "DomainNotLinked: The specified sender
+# domain has not been linked." azurerm_communication_service doesn't expose
+# linkedDomains in its schema, so we patch via the raw ARM API.
+resource "azapi_update_resource" "acs_link_domain" {
+  type        = "Microsoft.Communication/communicationServices@2023-04-01"
+  resource_id = azurerm_communication_service.acs.id
+
+  body = {
+    properties = {
+      linkedDomains = [
+        azurerm_email_communication_service_domain.azuremanaged.id
+      ]
+    }
+  }
+
+  depends_on = [
+    azurerm_email_communication_service_domain.azuremanaged,
+  ]
 }
 
 # === RBAC ====================================================================

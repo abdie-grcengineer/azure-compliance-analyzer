@@ -9,6 +9,7 @@ Runs every Monday at 09:00 UTC. The pipeline:
   3. Asks the Foundry CMMC Analyst agent for an executive-summary narrative
      over the structured findings.
   4. Writes the rendered Markdown report to Blob Storage.
+  5. Emails the report via Azure Communication Services Email.
 """
 
 import logging
@@ -22,6 +23,7 @@ from cmmc_mapper import CMMCMapper
 from analyst_agent import generate_narrative
 from report import render_report
 from blob_writer import write_report
+from email_sender import send_report_email
 
 app = func.FunctionApp()
 
@@ -53,13 +55,18 @@ def weekly_cmmc_report(timer: func.TimerRequest) -> None:
 
     narrative = generate_narrative(framework="CMMC Level 2", mapped_findings=mapped)
 
+    now = datetime.now(timezone.utc)
     report_md = render_report(
         framework="CMMC Level 2",
         standard=standard,
         mapped_findings=mapped,
         narrative=narrative,
-        generated_at=datetime.now(timezone.utc),
+        generated_at=now,
     )
 
     blob_url = write_report(report_md)
     logging.info("Report written: %s", blob_url)
+
+    subject = f"CMMC L2 Compliance Report - {now.strftime('%Y-%m-%d')}"
+    send_report_email(subject=subject, report_md=report_md, blob_url=blob_url)
+    logging.info("Report emailed to %s", os.environ.get("REPORT_RECIPIENT_EMAIL", "<unset>"))

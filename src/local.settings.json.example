@@ -10,6 +10,9 @@
     "REPORTS_CONTAINER": "reports",
     "DEFENDER_STANDARD": "NIST SP 800-171 Rev. 2",
     "DEFENDER_HOURS": "168",
-    "SUBSCRIPTION_ID": "<subscription-id>"
+    "SUBSCRIPTION_ID": "<subscription-id>",
+    "ACS_CONNECTION_STRING": "<from `terraform output -raw` or az communication list-keys>",
+    "ACS_SENDER": "donotreply@<azure-managed-domain>.azurecomm.net",
+    "REPORT_RECIPIENT_EMAIL": "abdiemohamed.tech@gmail.com"
   }
 }

@@ -8,4 +8,5 @@
 - RBAC via managed identity: Storage Blob Data Contributor (storage scope), Azure AI User (Foundry project scope), Security Reader (subscription scope, post-deploy manual step).
 - Static landing page: dedicated storage account with native Blob static-website hosting serving a single-page royal blue + white "GRC Engineering" landing.
 - Foundry model: **Phi-4** (Microsoft IP). Chosen deliberately for CMMC supply-chain reasons (keeps every system component inside Microsoft's compliance boundary, no third-party model vendor added). Parameterized via `foundry_model_name` / `foundry_model_format` so swapping to GPT-4o or other Foundry models is a tfvars change.
+- Email delivery: Azure Communication Services Email with an Azure-managed sender domain. Same in-boundary rationale as the Phi-4 model choice (no SendGrid / no third-party email vendor). Recipient set via `var.recipient_email`. v1 auths via connection string in app settings; v2 will move that to Key Vault.
 - Documentation: README with architecture diagram and roadmap, what-this-tool-does.md with the GRC Engineering framing.

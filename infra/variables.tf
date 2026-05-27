@@ -56,6 +56,12 @@ variable "defender_standard_name" {
   default     = "NIST SP 800-171 Rev. 2"
 }
 
+variable "recipient_email" {
+  type        = string
+  description = "Email address that receives the weekly CMMC compliance report. Sender is an Azure-managed donotreply address from ACS Email."
+  default     = "abdiemohamed.tech@gmail.com"
+}
+
 variable "common_tags" {
   type = map(string)
   description = "Tags applied to every resource. azurerm has no default_tags provider feature, so we pass this map to each resource explicitly."

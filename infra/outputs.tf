@@ -32,3 +32,13 @@ output "static_website_url" {
   description = "Public URL of the GRC Engineering static landing page."
   value       = azurerm_storage_account.website.primary_web_endpoint
 }
+
+output "report_sender_address" {
+  description = "Azure-managed sender address the weekly report is delivered from."
+  value       = "donotreply@${azurerm_email_communication_service_domain.azuremanaged.from_sender_domain}"
+}
+
+output "report_recipient" {
+  description = "Email address that receives the weekly report."
+  value       = var.recipient_email
+}
