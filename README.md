@@ -8,42 +8,9 @@ For a longer explanation of the problem, the approach, and why this counts as GR
 
 ## Architecture at a glance
 
-```
-                                                       ┌─────────────────────────┐
-                                                       │  Microsoft Defender for │
-                                                       │  Cloud                  │
-                                                       │  (NIST 800-171 Rev 2    │
-                                                       │   regulatory standard,  │
-                                                       │   continuously updated) │
-                                                       └────────────┬────────────┘
-                                                                    │  list controls
-                                                                    │  list assessments
-                                                                    ▼
-┌───────────────────────────┐    timer       ┌────────────────────────────────┐
-│  Azure Function           │ ──09:00 UTC──► │  defender_client.py            │
-│  (Linux consumption,      │   Mondays      │  cmmc_mapper.py                │
-│   Python 3.11)            │                │  report.py                     │
-│                           │                │  (deterministic compliance     │
-│   User-assigned MI ───────┼──Entra ID──►   │   plumbing - auditable)        │
-└───────────┬───────────────┘                └────────────────┬───────────────┘
-            │                                                 │
-            │ AIProjectClient                                 │ mapped findings JSON
-            ▼                                                 ▼
-┌───────────────────────────┐                ┌────────────────────────────────┐
-│  Azure AI Foundry         │                │  analyst_agent.py              │
-│  - AIServices account     │ ◄────invoke────│  (Foundry agent: executive     │
-│  - grc-analyst project    │                │   summary + remediation)       │
-│  - Phi-4 deployment       │                └────────────────┬───────────────┘
-│  - cmmc-compliance-       │                                 │
-│    analyst agent          │                                 ▼
-└───────────────────────────┘                ┌────────────────────────────────┐
-                                             │  Blob Storage                  │
-                                             │  reports/report-<ts>.md        │
-                                             └────────────────────────────────┘
 
-  Observability ──► Application Insights + Log Analytics Workspace
-  IaC           ──► Terraform (azurerm + azapi)
-```
+<img width="1079" height="606" alt="image" src="https://github.com/user-attachments/assets/10770a1f-c3af-465d-baf8-67a4c37792e9" />
+
 
 ## What's in v1
 
