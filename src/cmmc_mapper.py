@@ -11,6 +11,8 @@ v1 keeps the surface tiny on purpose. The full mapper (weighted keyword
 scoring, domain rollups, scoring per CMMC assessment guide) is a v2 task.
 """
 
+from __future__ import annotations
+
 import json
 import os
 from pathlib import Path

@@ -1,18 +1,18 @@
 """
-Foundry CMMC Analyst agent.
+Foundry CMMC Analyst.
 
-Uses the Azure AI Foundry Agent Service: persistent agents with system
-instructions, optional tools, and run-based conversations.
+Uses azure-ai-projects 2.x, which exposes the Foundry model deployments
+through an OpenAI-compatible chat completions endpoint. For the v1
+one-shot narrative generation we don't need persistent agent state, so
+we just call chat completions with the system prompt + structured user
+message in a single round trip.
 
-In v1 the agent has:
-  - A system prompt that scopes it to executive-audience narrative generation.
-  - No custom tools (the mapper and Defender client run in the Function,
-    not inside the agent). Tools are a v3 task per the README roadmap.
-
-The agent is looked up by name and created on first invocation if it
-doesn't already exist in the project. In v2+ we'd move agent creation
-into a deploy-time setup script and pin its ID via app setting.
+When we add tools in v3 (per the README roadmap), we'll switch to the
+agent + version pattern with `client.agents.create_version()` and the
+openai_client.chat.completions function-calling surface for tool calls.
 """
+
+from __future__ import annotations
 
 import json
 import logging
@@ -23,8 +23,6 @@ from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 
 logger = logging.getLogger(__name__)
-
-AGENT_NAME = "cmmc-compliance-analyst"
 
 SYSTEM_INSTRUCTIONS = """\
 You are a CMMC Level 2 compliance analyst writing for a Chief Information
@@ -82,55 +80,59 @@ def _project_client() -> AIProjectClient:
     return AIProjectClient(endpoint=endpoint, credential=DefaultAzureCredential())
 
 
-def _get_or_create_agent(client: AIProjectClient, model: str) -> str:
-    """Return the agent ID, creating the agent if it doesn't exist."""
-    for agent in client.agents.list_agents():
-        if agent.name == AGENT_NAME:
-            return agent.id
-
-    created = client.agents.create_agent(
-        model=model,
-        name=AGENT_NAME,
-        instructions=SYSTEM_INSTRUCTIONS,
-    )
-    logger.info("Created Foundry agent: %s", created.id)
-    return created.id
-
-
 def generate_narrative(framework: str, mapped_findings: list[dict[str, Any]]) -> str:
-    """Send mapped findings to the agent and return the narrative Markdown."""
+    """
+    One-shot chat completion against the Foundry model deployment.
+
+    Pattern: get the OpenAI-compatible client from the AIProjectClient,
+    call chat.completions.create with the deployment name as the model.
+    """
     model = os.environ["FOUNDRY_AGENT_MODEL"]
-    client = _project_client()
-    agent_id = _get_or_create_agent(client, model)
+    project = _project_client()
+    # No api_version: get_openai_client returns a plain openai.OpenAI pointed
+    # at <foundry_endpoint>/openai/v1, bearer-token auth wired from our
+    # DefaultAzureCredential. The model arg below is the Foundry deployment
+    # name ("Phi-4" in our default config).
+    openai_client = project.get_openai_client()
+
+    # Separate failing from non-failing so the agent doesn't conflate the total
+    # count with the count that needs action. In practice Phi-4 was reading
+    # "finding_count: 57" as "57 critical findings" before this split.
+    failing = [f for f in mapped_findings if f.get("State") == "Failed"]
+    other = [f for f in mapped_findings if f.get("State") != "Failed"]
 
     user_payload = {
         "framework": framework,
-        "finding_count": len(mapped_findings),
-        # Cap the prompt payload so we don't blow out the context window in v1.
-        # v4 will swap this for vector-store grounding.
-        "findings": mapped_findings[:200],
+        "counts": {
+            "total_assessments": len(mapped_findings),
+            "failing": len(failing),
+            "passing": sum(1 for f in other if f.get("State") == "Passed"),
+            "other_states": len(other) - sum(1 for f in other if f.get("State") == "Passed"),
+        },
+        # Only send the failing assessments to the agent — those are the only
+        # ones it can write actionable risks and decisions about. Cap at 100
+        # so we don't blow out the context window on a large tenant.
+        "failing_assessments": failing[:100],
     }
 
-    thread = client.agents.threads.create()
-    client.agents.messages.create(
-        thread_id=thread.id,
-        role="user",
-        content=(
-            "Generate an executive CMMC L2 compliance briefing from the "
-            f"following structured findings:\n\n```json\n{json.dumps(user_payload, default=str, indent=2)}\n```"
-        ),
-    )
-    run = client.agents.runs.create_and_process(
-        thread_id=thread.id,
-        agent_id=agent_id,
-    )
-
-    if run.status != "completed":
-        logger.error("Agent run did not complete: %s", run.status)
-        return f"_(Agent run failed: {run.status})_"
-
-    messages = client.agents.messages.list(thread_id=thread.id, order="desc")
-    for m in messages:
-        if m.role == "assistant" and m.text_messages:
-            return m.text_messages[-1].text.value
-    return "_(No assistant response)_"
+    try:
+        response = openai_client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": SYSTEM_INSTRUCTIONS},
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate an executive CMMC L2 compliance briefing from the "
+                        "following structured findings:\n\n"
+                        f"```json\n{json.dumps(user_payload, default=str, indent=2)}\n```"
+                    ),
+                },
+            ],
+            max_tokens=2000,
+            temperature=0.3,
+        )
+        return response.choices[0].message.content or "_(empty agent response)_"
+    except Exception as e:
+        logger.error("Foundry chat completion failed: %s", e)
+        return f"_(Agent call failed: {e})_"
