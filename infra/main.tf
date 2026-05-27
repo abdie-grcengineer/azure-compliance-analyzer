@@ -130,12 +130,24 @@ resource "azapi_resource" "foundry_project" {
 
 # Model deployment lives on the account, not the project. The agent we
 # create at runtime references it by name.
-resource "azurerm_cognitive_deployment" "gpt" {
+#
+# v1 default: Phi-4 (Microsoft IP). Picked deliberately for CMMC reasons:
+# keeping every component of the system inside Microsoft's compliance
+# boundary means zero additional third-party vendor review when an
+# assessor asks "who built every component that processes your
+# CUI-adjacent data?". GPT-4o would give better narrative polish but
+# adds OpenAI to the supply chain inventory.
+#
+# NOTE: Microsoft has shifted Phi between standard cognitive deployments
+# and serverless MaaS endpoints over time. If `terraform apply` errors
+# on this resource, check the Foundry portal model catalog for the
+# current name/version/format strings and update the variables.
+resource "azurerm_cognitive_deployment" "model" {
   name                 = var.foundry_model_name
   cognitive_account_id = azurerm_ai_services.foundry.id
 
   model {
-    format  = "OpenAI"
+    format  = var.foundry_model_format
     name    = var.foundry_model_name
     version = var.foundry_model_version
   }

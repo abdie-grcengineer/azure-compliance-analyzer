@@ -10,6 +10,7 @@ environment         = "demo"
 # custom standard if your tenant uses one.
 defender_standard_name = "NIST SP 800-171 Rev. 2"
 
-foundry_model_name     = "gpt-4o"
-foundry_model_version  = "2024-11-20"
+foundry_model_name     = "Phi-4"
+foundry_model_version  = "1"
+foundry_model_format   = "Microsoft"
 foundry_model_capacity = 50

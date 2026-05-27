@@ -28,14 +28,20 @@ variable "environment" {
 
 variable "foundry_model_name" {
   type        = string
-  description = "Model to deploy in Azure AI Foundry for the GRC Analyst agent."
-  default     = "gpt-4o"
+  description = "Model to deploy in Azure AI Foundry for the CMMC Analyst agent. Default is Phi-4 (Microsoft IP, in-boundary, no third-party vendor added to the CMMC supply chain). Swap to gpt-4o (with foundry_model_format='OpenAI') for stronger narrative quality at the cost of OpenAI showing up in your component inventory."
+  default     = "Phi-4"
 }
 
 variable "foundry_model_version" {
   type        = string
-  description = "Model version for the Foundry deployment."
-  default     = "2024-11-20"
+  description = "Model version for the Foundry deployment. Verify the current version string in the Foundry portal model catalog before applying; Microsoft revises Phi versions periodically."
+  default     = "1"
+}
+
+variable "foundry_model_format" {
+  type        = string
+  description = "Model publisher format for the cognitive deployment. 'Microsoft' for Phi family, 'OpenAI' for GPT family."
+  default     = "Microsoft"
 }
 
 variable "foundry_model_capacity" {

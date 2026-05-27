@@ -33,7 +33,7 @@ For a longer explanation of the problem, the approach, and why this counts as GR
 │  Azure AI Foundry         │                │  analyst_agent.py              │
 │  - AIServices account     │ ◄────invoke────│  (Foundry agent: executive     │
 │  - grc-analyst project    │                │   summary + remediation)       │
-│  - GPT-4o deployment      │                └────────────────┬───────────────┘
+│  - Phi-4 deployment       │                └────────────────┬───────────────┘
 │  - cmmc-compliance-       │                                 │
 │    analyst agent          │                                 ▼
 └───────────────────────────┘                ┌────────────────────────────────┐
@@ -50,7 +50,7 @@ For a longer explanation of the problem, the approach, and why this counts as GR
 - **IaC**: Terraform (azurerm 4.x + azapi 2.x). Resource group is a precondition; everything else is provisioned by `terraform apply`.
 - **Standard**: CMMC Level 2 (110 practices, mapped through NIST SP 800-171 Rev. 2).
 - **Compute**: Linux Consumption Function App (Python 3.11) with a weekly NCRONTAB timer.
-- **AI**: Azure AI Foundry project hosting a `cmmc-compliance-analyst` agent backed by a GPT-4o deployment. Agent is created on first invocation if it doesn't exist.
+- **AI**: Azure AI Foundry project hosting a `cmmc-compliance-analyst` agent backed by a **Phi-4** deployment (Microsoft IP, in Azure's compliance boundary). Picked over GPT-4o deliberately so the system has zero third-party model vendors in its supply chain, which matters when a CMMC assessor asks for a component inventory. Agent is created on first invocation if it doesn't exist.
 - **Identity**: User-assigned managed identity, RBAC-scoped (`Storage Blob Data Contributor` on the storage account, `Azure AI User` on the Foundry project, `Security Reader` at subscription scope via a post-deploy `az role assignment`).
 - **Output**: Markdown report per run, dropped in `reports/` container in Blob Storage.
 - **Static landing page**: Royal blue + white "GRC Engineering" page served from a dedicated storage account at `https://grcengineering<suffix>.z13.web.core.windows.net/`. Source in [web/index.html](web/index.html); served via Blob Storage's native static-website hosting (no separate web server or App Service).
