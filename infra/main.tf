@@ -232,3 +232,47 @@ resource "azurerm_role_assignment" "foundry_ai_user" {
   role_definition_name = "Azure AI User"
   principal_id         = azurerm_user_assigned_identity.uami.principal_id
 }
+
+# === Static website ==========================================================
+#
+# Dedicated storage account for the public GRC Engineering landing page.
+# Separate from the analyzer's data storage so the URL reads as
+# `grcengineering<suffix>.z13.web.core.windows.net` and so destroying or
+# rebuilding the site never touches the compliance evidence container.
+#
+# Storage account names must be 3-24 chars, lowercase alphanumeric, globally
+# unique. "grcengineering" (14) + 6-char suffix = 20 chars; under the limit.
+
+resource "azurerm_storage_account" "website" {
+  name                            = "grcengineering${local.suffix}"
+  resource_group_name             = data.azurerm_resource_group.rg.name
+  location                        = var.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  account_kind                    = "StorageV2"
+  min_tls_version                 = "TLS1_2"
+  allow_nested_items_to_be_public = false
+  https_traffic_only_enabled      = true
+
+  # Enabling static_website auto-creates the special `$web` container and
+  # exposes the *.z13.web.core.windows.net endpoint. The endpoint serves
+  # blobs in $web publicly regardless of the allow_nested_items_to_be_public
+  # flag, so we can keep direct blob access locked down.
+  static_website {
+    index_document     = "index.html"
+    error_404_document = "index.html"
+  }
+
+  tags = local.tags
+}
+
+resource "azurerm_storage_blob" "index_html" {
+  name                   = "index.html"
+  storage_account_name   = azurerm_storage_account.website.name
+  storage_container_name = "$web"
+  type                   = "Block"
+  content_type           = "text/html"
+  source                 = "${path.module}/../web/index.html"
+  # MD5 of the source file forces re-upload whenever the HTML changes.
+  content_md5            = filemd5("${path.module}/../web/index.html")
+}

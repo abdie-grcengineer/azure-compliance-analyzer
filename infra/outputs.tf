@@ -27,3 +27,8 @@ output "subscription_id" {
   description = "Subscription ID the Function is scoped to for Defender queries."
   value       = data.azurerm_client_config.current.subscription_id
 }
+
+output "static_website_url" {
+  description = "Public URL of the GRC Engineering static landing page."
+  value       = azurerm_storage_account.website.primary_web_endpoint
+}

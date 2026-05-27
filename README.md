@@ -53,6 +53,7 @@ For a longer explanation of the problem, the approach, and why this counts as GR
 - **AI**: Azure AI Foundry project hosting a `cmmc-compliance-analyst` agent backed by a GPT-4o deployment. Agent is created on first invocation if it doesn't exist.
 - **Identity**: User-assigned managed identity, RBAC-scoped (`Storage Blob Data Contributor` on the storage account, `Azure AI User` on the Foundry project, `Security Reader` at subscription scope via a post-deploy `az role assignment`).
 - **Output**: Markdown report per run, dropped in `reports/` container in Blob Storage.
+- **Static landing page**: Royal blue + white "GRC Engineering" page served from a dedicated storage account at `https://grcengineering<suffix>.z13.web.core.windows.net/`. Source in [web/index.html](web/index.html); served via Blob Storage's native static-website hosting (no separate web server or App Service).
 
 ## What's not in v1 (roadmap)
 
