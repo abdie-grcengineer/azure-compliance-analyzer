@@ -105,6 +105,24 @@ resource "azurerm_ai_services" "foundry" {
   tags = local.tags
 }
 
+# Patch in `allowProjectManagement = true` after the account is created.
+# Microsoft added this requirement in 2025: without it, the AIServices
+# account refuses child project creation with "Project can only created
+# under AIServices Kind account with allowProjectManagement set to true".
+# The azurerm_ai_services resource doesn't expose this property in its
+# schema (it's feature-frozen in favor of azurerm_cognitive_account),
+# so we patch it directly via the ARM API.
+resource "azapi_update_resource" "foundry_allow_projects" {
+  type        = "Microsoft.CognitiveServices/accounts@2025-04-01-preview"
+  resource_id = azurerm_ai_services.foundry.id
+
+  body = {
+    properties = {
+      allowProjectManagement = true
+    }
+  }
+}
+
 # Foundry project. Child of the AIServices account. azurerm doesn't yet
 # cover this resource shape cleanly, so we go through azapi to talk to the
 # raw ARM API.
@@ -126,6 +144,9 @@ resource "azapi_resource" "foundry_project" {
   }
 
   response_export_values = ["id", "name"]
+
+  # Project creation requires allowProjectManagement to be true on the parent.
+  depends_on = [azapi_update_resource.foundry_allow_projects]
 }
 
 # Model deployment lives on the account, not the project. The agent we
@@ -237,11 +258,13 @@ resource "azurerm_role_assignment" "storage_blob" {
   principal_id         = azurerm_user_assigned_identity.uami.principal_id
 }
 
-# Azure AI User on the Foundry project: lets the Function's MI create and
-# invoke agents, create threads, send messages, and read runs.
-resource "azurerm_role_assignment" "foundry_ai_user" {
+# Azure AI Developer on the Foundry project: lets the Function's MI create
+# and invoke agents, create threads, send messages, and read runs. Microsoft
+# renamed the original "Azure AI User" role; "Azure AI Developer" is the
+# current built-in that covers agent/thread/message/run CRUD on a project.
+resource "azurerm_role_assignment" "foundry_ai_developer" {
   scope                = azapi_resource.foundry_project.id
-  role_definition_name = "Azure AI User"
+  role_definition_name = "Azure AI Developer"
   principal_id         = azurerm_user_assigned_identity.uami.principal_id
 }
 

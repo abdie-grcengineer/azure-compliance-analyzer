@@ -11,6 +11,6 @@ environment         = "demo"
 defender_standard_name = "NIST SP 800-171 Rev. 2"
 
 foundry_model_name     = "Phi-4"
-foundry_model_version  = "1"
+foundry_model_version  = "3"
 foundry_model_format   = "Microsoft"
-foundry_model_capacity = 50
+foundry_model_capacity = 1

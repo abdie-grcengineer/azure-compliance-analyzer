@@ -24,6 +24,9 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+# Saved plans contain rendered state and shouldn't be committed
+tfplan
+tfplan*
 
 # Editors
 .vscode/

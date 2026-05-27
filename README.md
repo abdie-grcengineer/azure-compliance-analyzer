@@ -141,6 +141,13 @@ The timer runs once a week in production. To force a manual run during developme
 
 ## Things to know before you deploy
 
+Gotchas surfaced during real `terraform apply` validation on Azure:
+
+- **Phi model versions rotate.** Microsoft deprecates Phi versions periodically (the entire Phi-3 family was retired on 2025-08-30, mid-build). Run `az cognitiveservices model list --location <region> --query "[?model.format=='Microsoft'].{n:model.name, v:model.version, dep:model.deprecation.inference}"` to confirm current versions before applying.
+- **Capacity unit differs by model family.** OpenAI deployments take capacity in thousands of TPM (50 = 50K TPM). Phi deployments take capacity in deployment units capped at 1. The default in this repo is 1 to match the more restrictive case.
+- **AIServices needs `allowProjectManagement = true` for projects.** Microsoft added this in 2025. The `azurerm_ai_services` resource doesn't expose the flag, so we patch it via `azapi_update_resource.foundry_allow_projects`. Without it, child project creation 400s with "Project can only created under AIServices Kind account with allowProjectManagement set to true".
+- **The Foundry agent RBAC role is `Azure AI Developer`, not `Azure AI User`.** Microsoft renamed it. Old name returns "could not find role" at apply.
+- **Consumer / pay-as-you-go subs default `Total VMs` quota to 0.** Y1 consumption Function Apps need 1 VM unit under the hood; without quota you'll hit a 401 Unauthorized at `azurerm_service_plan` creation. Fix: Portal → Quotas → Compute → request increase for "Total Regional vCPUs" or "Standard BS Family". Takes minutes to hours depending on sub type.
 - **Foundry SDK is moving fast.** The `azure-ai-projects` agent surface changed several times in 2024-2025. If `client.agents.threads.create()` errors at runtime, pin a known-good `azure-ai-projects` version.
 - **Defender severity isn't native.** Assessments carry `state` (Passed / Failed / Skipped / Unsupported) but no severity. We synthesize a severity in [defender_client.py](src/defender_client.py) so the report can group by severity.
 - **`default_tags` doesn't exist in azurerm.** A `common_tags` map is defined in `variables.tf` and merged into every resource.

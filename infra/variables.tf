@@ -28,14 +28,14 @@ variable "environment" {
 
 variable "foundry_model_name" {
   type        = string
-  description = "Model to deploy in Azure AI Foundry for the CMMC Analyst agent. Default is Phi-4 (Microsoft IP, in-boundary, no third-party vendor added to the CMMC supply chain). Swap to gpt-4o (with foundry_model_format='OpenAI') for stronger narrative quality at the cost of OpenAI showing up in your component inventory."
+  description = "Model to deploy in Azure AI Foundry for the CMMC Analyst agent. Default is Phi-4 (Microsoft IP, in-boundary, 14B params, no third-party vendor added to the CMMC supply chain). The Phi-3 family was deprecated on 2025-08-30 so don't fall back there. Swap to gpt-4o (with foundry_model_format='OpenAI') for stronger narrative quality at the cost of OpenAI showing up in your component inventory."
   default     = "Phi-4"
 }
 
 variable "foundry_model_version" {
   type        = string
-  description = "Model version for the Foundry deployment. Verify the current version string in the Foundry portal model catalog before applying; Microsoft revises Phi versions periodically."
-  default     = "1"
+  description = "Model version for the Foundry deployment. Verify the latest non-deprecated version: az cognitiveservices model list --location <region> --query \"[?model.name=='Phi-4'].{v:model.version, dep:model.deprecation.inference}\""
+  default     = "3"
 }
 
 variable "foundry_model_format" {
@@ -46,8 +46,8 @@ variable "foundry_model_format" {
 
 variable "foundry_model_capacity" {
   type        = number
-  description = "Capacity for the Foundry model deployment (thousands of tokens per minute)."
-  default     = 50
+  description = "Capacity for the Foundry model deployment. Units differ by model family: OpenAI uses thousands of tokens per minute (50 = 50K TPM, typical), Phi-3 family uses deployment units capped at 1. Default is 1 to match the more restrictive case (Phi-3); bump to 50 if switching to gpt-4o."
+  default     = 1
 }
 
 variable "defender_standard_name" {
