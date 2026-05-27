@@ -56,7 +56,7 @@ def weekly_cmmc_report(timer: func.TimerRequest) -> None:
     narrative = generate_narrative(framework="CMMC Level 2", mapped_findings=mapped)
 
     now = datetime.now(timezone.utc)
-    report_md = render_report(
+    report_md, rag_label, rag_color, rag_headline = render_report(
         framework="CMMC Level 2",
         standard=standard,
         mapped_findings=mapped,
@@ -65,8 +65,15 @@ def weekly_cmmc_report(timer: func.TimerRequest) -> None:
     )
 
     blob_url = write_report(report_md)
-    logging.info("Report written: %s", blob_url)
+    logging.info("Report written: %s (RAG=%s)", blob_url, rag_label)
 
-    subject = f"CMMC L2 Compliance Report - {now.strftime('%Y-%m-%d')}"
-    send_report_email(subject=subject, report_md=report_md, blob_url=blob_url)
+    subject = f"CMMC L2 Weekly Briefing - {now.strftime('%Y-%m-%d')}"
+    send_report_email(
+        subject=subject,
+        report_md=report_md,
+        blob_url=blob_url,
+        rag_label=rag_label,
+        rag_color=rag_color,
+        rag_headline=rag_headline,
+    )
     logging.info("Report emailed to %s", os.environ.get("REPORT_RECIPIENT_EMAIL", "<unset>"))
